@@ -146,18 +146,24 @@ function getBaseArgs(): string[] {
   const args = [
     "--no-warnings",
     "--no-playlist",
-    // 1. Lách luật Bot của YouTube bằng cách giả lập request từ app Mobile/TV
-    "--extractor-args", "youtube:player_client=android,ios,web",
-    // 2. Vượt rào cản khóa khu vực quốc gia
+    // ĐÃ XÓA DÒNG GIẢ LẬP ANDROID/IOS VÌ ĐÃ CÓ COOKIE
     "--geo-bypass",
   ];
 
-  // 3. Tích hợp sẵn Cookie (nếu bạn khai báo YTDLP_COOKIES trong Railway Variables sau này)
+  // Tích hợp sẵn Cookie 
   if (process.env.YTDLP_COOKIES) {
     args.push("--cookies", process.env.YTDLP_COOKIES);
   }
 
   return args;
+}
+
+// 3. Tích hợp sẵn Cookie (nếu bạn khai báo YTDLP_COOKIES trong Railway Variables sau này)
+if (process.env.YTDLP_COOKIES) {
+  args.push("--cookies", process.env.YTDLP_COOKIES);
+}
+
+return args;
 }
 
 export async function fetchMediaInfo(rawUrl: string, options: SpawnOptions = {}): Promise<MediaInfo> {
