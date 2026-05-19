@@ -1,0 +1,19 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model StreamHistory {
+  id          BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  source_url  String   @db.Text
+  media_title String   @db.VarChar(512)
+  resolution  String   @db.VarChar(64)
+  streamed_at DateTime @default(now())
+
+  @@index([streamed_at])
+  @@map("stream_history")
+}
