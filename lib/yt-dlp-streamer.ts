@@ -146,24 +146,14 @@ function getBaseArgs(): string[] {
   const args = [
     "--no-warnings",
     "--no-playlist",
-    // ĐÃ XÓA DÒNG GIẢ LẬP ANDROID/IOS VÌ ĐÃ CÓ COOKIE
     "--geo-bypass",
   ];
 
-  // Tích hợp sẵn Cookie 
   if (process.env.YTDLP_COOKIES) {
     args.push("--cookies", process.env.YTDLP_COOKIES);
   }
 
   return args;
-}
-
-// 3. Tích hợp sẵn Cookie (nếu bạn khai báo YTDLP_COOKIES trong Railway Variables sau này)
-if (process.env.YTDLP_COOKIES) {
-  args.push("--cookies", process.env.YTDLP_COOKIES);
-}
-
-return args;
 }
 
 export async function fetchMediaInfo(rawUrl: string, options: SpawnOptions = {}): Promise<MediaInfo> {
