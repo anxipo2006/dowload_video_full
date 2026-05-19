@@ -26,7 +26,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Missing url query parameter" }, { status: 400 });
     }
 
+    // 1. Quét thông tin video trước
     const info = await fetchMediaInfo(sourceUrl, { timeoutMs: 45_000 });
+
+    // 2. Khởi tạo tiến trình stream
     const { child, timeout, safeUrl, getStderr } = await spawnStreamProcess(sourceUrl, resolution);
 
     request.signal.addEventListener("abort", () => {
@@ -36,6 +39,7 @@ export async function GET(request: NextRequest) {
     let completed = false;
     let failed = false;
 
+    // 3. Khởi tạo luồng ReadableStream
     const stream = new ReadableStream<Uint8Array>({
       start(controller) {
         child.stdout.on("data", (chunk: Buffer) => {
@@ -65,22 +69,21 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    child.once("close", async (code) => {
-      if (code === 0 && !failed) {
-        try {
-          await prisma.streamHistory.create({
-            data: {
-              source_url: safeUrl,
-              media_title: info.title,
-              resolution,
-            },
-          });
-        } catch {
-          // do not interrupt active stream response due to logging issues
-        }
-      }
-    });
+    // 4. LƯU DATABASE NGAY LẬP TỨC TRƯỚC KHI STREAM TRẢ VỀ TRÌNH DUYỆT
+    try {
+      await prisma.streamHistory.create({
+        data: {
+          source_url: safeUrl,
+          media_title: info.title || "Unknown Title",
+          resolution: resolution,
+        },
+      });
+      console.log("✅ Đã lưu lịch sử tải vào Database Railway thành công!");
+    } catch (dbError) {
+      console.error("❌ Lỗi lưu Database:", dbError);
+    }
 
+    // 5. Trả stream về trình duyệt (Ép tải xuống)
     return new NextResponse(stream, {
       status: 200,
       headers: {
@@ -90,7 +93,6 @@ export async function GET(request: NextRequest) {
         "X-Frame-Options": "DENY",
         "Referrer-Policy": "no-referrer",
         "Cross-Origin-Resource-Policy": "same-origin",
-        // Đã đổi "inline" thành "attachment" để bắt buộc trình duyệt tải xuống
         "Content-Disposition": `attachment; filename="downloaded_video.${resolution === "audio" ? "webm" : "mp4"}"`,
       },
     });
