@@ -146,6 +146,8 @@ function getBaseArgs(): string[] {
   const args = [
     "--no-warnings",
     "--no-playlist",
+    // Dùng mặt nạ Smart TV để tránh lỗi định dạng và lách Bot
+    "--extractor-args", "youtube:player_client=tv,web",
     "--geo-bypass",
   ];
 
