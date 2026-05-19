@@ -141,11 +141,31 @@ function attachTimeout(child: ChildProcessWithoutNullStreams, timeoutMs: number)
   }, timeoutMs);
 }
 
+// Hàm cấu hình lõi (THÊM MỚI Ở BẢN NÂNG CẤP)
+function getBaseArgs(): string[] {
+  const args = [
+    "--no-warnings",
+    "--no-playlist",
+    // 1. Lách luật Bot của YouTube bằng cách giả lập request từ app Mobile/TV
+    "--extractor-args", "youtube:player_client=android,ios,web",
+    // 2. Vượt rào cản khóa khu vực quốc gia
+    "--geo-bypass",
+  ];
+
+  // 3. Tích hợp sẵn Cookie (nếu bạn khai báo YTDLP_COOKIES trong Railway Variables sau này)
+  if (process.env.YTDLP_COOKIES) {
+    args.push("--cookies", process.env.YTDLP_COOKIES);
+  }
+
+  return args;
+}
+
 export async function fetchMediaInfo(rawUrl: string, options: SpawnOptions = {}): Promise<MediaInfo> {
   const safeUrl = await sanitizeAndAuthorizeUrl(rawUrl);
   const timeoutMs = options.timeoutMs ?? DEFAULT_INFO_TIMEOUT_MS;
 
-  const args = ["--no-warnings", "--no-playlist", "-J", safeUrl];
+  // Sử dụng cấu hình lõi nâng cấp
+  const args = [...getBaseArgs(), "-J", safeUrl];
 
   const child = spawn(YTDLP_BIN, args, {
     shell: false,
@@ -170,7 +190,8 @@ export async function fetchMediaInfo(rawUrl: string, options: SpawnOptions = {})
     }
   });
 
-  const timeout = attachTimeout(child, timeoutMs);
+  // @ts-ignore
+  const timeout = attachTimeout(child as any, timeoutMs);
 
   const exitCode = await new Promise<number>((resolve, reject) => {
     child.once("error", reject);
@@ -200,9 +221,9 @@ export async function spawnStreamProcess(rawUrl: string, resolution: StreamResol
   const safeUrl = await sanitizeAndAuthorizeUrl(rawUrl);
   const timeoutMs = options.timeoutMs ?? DEFAULT_STREAM_TIMEOUT_MS;
 
+  // Sử dụng cấu hình lõi nâng cấp
   const args = [
-    "--no-warnings",
-    "--no-playlist",
+    ...getBaseArgs(),
     "-f",
     formatSelectorForResolution(resolution),
     "-o",
@@ -224,7 +245,8 @@ export async function spawnStreamProcess(rawUrl: string, resolution: StreamResol
     }
   });
 
-  const timeout = attachTimeout(child, timeoutMs);
+  // @ts-ignore
+  const timeout = attachTimeout(child as any, timeoutMs);
 
   return {
     child,

@@ -1,5 +1,5 @@
 # Dùng hệ điều hành Linux có sẵn Node.js 18
-FROM node:20-bullseye
+FROM node:20-bookworm
 
 # Cài đặt Python, PIP và FFmpeg (rất quan trọng để ghép video+audio chất lượng cao)
 RUN apt-get update && apt-get install -y python3 python3-pip ffmpeg
