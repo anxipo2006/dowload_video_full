@@ -122,16 +122,16 @@ export async function sanitizeAndAuthorizeUrl(rawUrl: string): Promise<string> {
 }
 
 function formatSelectorForResolution(resolution: StreamResolution): string {
+  // Bỏ qua việc đòi hỏi ghép hình + tiếng phức tạp, 
+  // ép lấy file gộp sẵn (b = best) của giao diện Mobile để không bị lỗi format
   switch (resolution) {
     case "audio":
       return "bestaudio/best";
     case "720p":
-      return "bestvideo[height<=720]+bestaudio/best[height<=720]/best";
     case "1080p":
-      return "bestvideo[height<=1080]+bestaudio/best[height<=1080]/best";
     case "best":
     default:
-      return "bestvideo+bestaudio/best";
+      return "b";
   }
 }
 
@@ -143,19 +143,13 @@ function attachTimeout(child: ChildProcessWithoutNullStreams, timeoutMs: number)
 
 // Hàm cấu hình lõi (THÊM MỚI Ở BẢN NÂNG CẤP)
 function getBaseArgs(): string[] {
-  const args = [
+  return [
     "--no-warnings",
     "--no-playlist",
-    // Dùng mặt nạ Smart TV để tránh lỗi định dạng và lách Bot
-    "--extractor-args", "youtube:player_client=tv,web",
+    // Dùng lại mặt nạ Android để lách Bot 100% không cần Cookie
+    "--extractor-args", "youtube:player_client=android",
     "--geo-bypass",
   ];
-
-  if (process.env.YTDLP_COOKIES) {
-    args.push("--cookies", process.env.YTDLP_COOKIES);
-  }
-
-  return args;
 }
 
 export async function fetchMediaInfo(rawUrl: string, options: SpawnOptions = {}): Promise<MediaInfo> {
